@@ -39664,5 +39664,28 @@
                 "login": "lv913"
             }
         }
+    },
+    "langflow": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "automation",
+            "development",
+            "home-automation",
+            "monitoring",
+            "tools",
+            "utility"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:21:35.389Z",
+            "author": {
+                "id": 226769843,
+                "login": "SayalinMohamed2008"
+            }
+        },
+        "colors": {
+            "light": "langflow-light",
+            "dark": "langflow-dark"
+        }
     }
 }
