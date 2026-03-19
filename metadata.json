@@ -39399,5 +39399,20 @@
         "colors": {
             "dark": "omnibus-dark"
         }
+    },
+    "dockmon": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "monitoring",
+            "tools"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:20:51.820Z",
+            "author": {
+                "id": "3rfpyc0daf8h79f",
+                "name": "DarthNorse"
+            }
+        }
     }
 }
