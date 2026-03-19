@@ -40059,5 +40059,20 @@
                 "login": "pablomarusich"
             }
         }
+    },
+    "musicbrainz-picard": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [
+            "tools",
+            "media"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T20:17:28.664Z",
+            "author": {
+                "id": 91204754,
+                "login": "ArthurBilyk02"
+            }
+        }
     }
 }
