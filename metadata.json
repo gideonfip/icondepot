@@ -28956,14 +28956,12 @@
     "ezbookkeeping": {
         "base": "png",
         "aliases": [],
-        "categories": [
-            "Finance"
-        ],
+        "categories": [],
         "update": {
-            "timestamp": "2025-02-26T14:20:53.966566",
+            "timestamp": "2026-03-19T20:17:13.855Z",
             "author": {
-                "id": 136271119,
-                "login": "1270o1"
+                "id": 160418822,
+                "login": "markrieder"
             }
         }
     },
