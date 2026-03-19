@@ -39652,5 +39652,17 @@
                 "login": "Zain3967"
             }
         }
+    },
+    "kima": {
+        "base": "png",
+        "aliases": [],
+        "categories": [],
+        "update": {
+            "timestamp": "2026-03-19T19:21:31.970Z",
+            "author": {
+                "id": 18677216,
+                "login": "lv913"
+            }
+        }
     }
 }
