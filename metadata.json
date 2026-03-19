@@ -39717,5 +39717,23 @@
                 "login": "Dvorinka"
             }
         }
+    },
+    "new-api": {
+        "base": "png",
+        "aliases": [
+            "new-api"
+        ],
+        "categories": [
+            "automation",
+            "utility",
+            "tools"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:21:43.863Z",
+            "author": {
+                "id": 72839683,
+                "login": "ryo9999"
+            }
+        }
     }
 }
