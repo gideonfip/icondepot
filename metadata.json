@@ -39767,5 +39767,24 @@
         "colors": {
             "light": "monarch-money-light"
         }
+    },
+    "zotero": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "utility",
+            "tools",
+            "automation"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:21:51.801Z",
+            "author": {
+                "id": 55525165,
+                "login": "WCY-dt"
+            }
+        },
+        "wordmark": {
+            "light": "zotero-wordmark-light"
+        }
     }
 }
