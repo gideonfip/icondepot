@@ -39380,5 +39380,24 @@
         "colors": {
             "dark": "proxcenter-dark"
         }
+    },
+    "omnibus": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "entertainment",
+            "media",
+            "automation"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:20:48.100Z",
+            "author": {
+                "id": 38105254,
+                "login": "hankscafe"
+            }
+        },
+        "colors": {
+            "dark": "omnibus-dark"
+        }
     }
 }
