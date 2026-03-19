@@ -40258,5 +40258,20 @@
                 "login": "xiaoyuediandao"
             }
         }
+    },
+    "open-drone-log": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "tools",
+            "utility"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T20:18:06.460Z",
+            "author": {
+                "id": 100546585,
+                "login": "OwenWright8"
+            }
+        }
     }
 }
