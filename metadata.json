@@ -39521,5 +39521,20 @@
                 "login": "StephanMeijer"
             }
         }
+    },
+    "rackpeek": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [
+            "utility",
+            "network"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T19:21:11.779Z",
+            "author": {
+                "id": 27533751,
+                "login": "davothegeek"
+            }
+        }
     }
 }
