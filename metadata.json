@@ -39941,5 +39941,21 @@
                 "login": "Jixaly"
             }
         }
+    },
+    "sure": {
+        "base": "svg",
+        "aliases": [
+            "sure.am"
+        ],
+        "categories": [
+            "finance"
+        ],
+        "update": {
+            "timestamp": "2026-03-19T20:17:05.232Z",
+            "author": {
+                "id": 12419202,
+                "login": "lucschober"
+            }
+        }
     }
 }
