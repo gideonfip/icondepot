@@ -40411,5 +40411,21 @@
                 "login": "Clonerich"
             }
         }
+    },
+    "freebox-ultra": {
+        "base": "png",
+        "aliases": [
+            "freebox"
+        ],
+        "categories": [
+            "network"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:11:00.285Z",
+            "author": {
+                "id": 33026252,
+                "login": "DarkmoreHooks"
+            }
+        }
     }
 }
