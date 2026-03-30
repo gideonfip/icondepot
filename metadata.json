@@ -40345,5 +40345,17 @@
                 "login": "sixsixfive"
             }
         }
+    },
+    "goldilocks": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [],
+        "update": {
+            "timestamp": "2026-03-30T13:10:47.901Z",
+            "author": {
+                "id": 5822722,
+                "login": "mzellho"
+            }
+        }
     }
 }
