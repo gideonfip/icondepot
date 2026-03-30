@@ -40333,5 +40333,17 @@
                 "login": "sixsixfive"
             }
         }
+    },
+    "bikerouter": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [],
+        "update": {
+            "timestamp": "2026-03-30T13:10:45.377Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
