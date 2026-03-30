@@ -40427,5 +40427,22 @@
                 "login": "DarkmoreHooks"
             }
         }
+    },
+    "krokiet": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [
+            "tools",
+            "utility",
+            "storage",
+            "home-automation"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:11:02.678Z",
+            "author": {
+                "id": 63834348,
+                "login": "Will-Schr"
+            }
+        }
     }
 }
