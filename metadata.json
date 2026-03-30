@@ -40493,5 +40493,23 @@
                 "login": "sixsixfive"
             }
         }
+    },
+    "eu-drive": {
+        "base": "svg",
+        "aliases": [
+            "office-eu-drive",
+            "upload"
+        ],
+        "categories": [
+            "cloud",
+            "storage"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:11:14.753Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
