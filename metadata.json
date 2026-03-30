@@ -40784,5 +40784,22 @@
                 "name": "groldeath"
             }
         }
+    },
+    "playstation-plus": {
+        "base": "svg",
+        "aliases": [
+            "cloud-gaming-ps+"
+        ],
+        "categories": [
+            "cloud",
+            "gaming"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:12:01.750Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
