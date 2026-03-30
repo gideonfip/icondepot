@@ -40357,5 +40357,20 @@
                 "login": "mzellho"
             }
         }
+    },
+    "huex": {
+        "base": "png",
+        "aliases": [],
+        "categories": [
+            "gaming",
+            "network"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:10:50.349Z",
+            "author": {
+                "id": 140433870,
+                "login": "yuyukj888"
+            }
+        }
     }
 }
