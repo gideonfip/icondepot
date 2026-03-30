@@ -40801,5 +40801,22 @@
                 "login": "sixsixfive"
             }
         }
+    },
+    "amazon-luna": {
+        "base": "svg",
+        "aliases": [
+            "cloud-gaming-luna"
+        ],
+        "categories": [
+            "cloud",
+            "gaming"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:12:04.264Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
