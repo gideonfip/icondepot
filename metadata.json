@@ -40306,5 +40306,20 @@
                 "name": "Zeifa"
             }
         }
+    },
+    "anydesk": {
+        "base": "svg",
+        "aliases": [],
+        "categories": [
+            "monitoring",
+            "tools"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:10:40.456Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
