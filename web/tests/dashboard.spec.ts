@@ -100,7 +100,7 @@ test.describe("Dashboard - Authenticated Admin (Desktop)", () => {
 	test("should show action-needed banner for approved submissions", async ({
 		page,
 	}) => {
-		const banner = page.getByText(/approved submission.*ready for GitHub CI/i)
+		const banner = page.getByText(/approved.*submission.*available/i)
 		await expect(banner).toBeVisible()
 		await expect(
 			page.getByRole("button", { name: "Select all approved" }),
@@ -165,7 +165,7 @@ test.describe("Dashboard - Authenticated Admin (Desktop)", () => {
 
 		await expect(page.getByText(/selected/)).not.toBeVisible()
 		await expect(
-			page.getByText(/approved submission.*ready for GitHub CI/i),
+			page.getByText(/approved.*submission.*available/i),
 		).toBeVisible()
 	})
 
@@ -281,7 +281,7 @@ test.describe("Dashboard - Mobile", () => {
 
 	test("should show action-needed banner on mobile", async ({ page }) => {
 		await expect(
-			page.getByText(/approved submission.*ready for/i),
+			page.getByText(/approved.*submission.*available/i),
 		).toBeVisible()
 		await expect(
 			page.getByRole("button", { name: "Select all approved" }),
