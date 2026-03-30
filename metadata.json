@@ -40588,5 +40588,21 @@
                 "login": "sixsixfive"
             }
         }
+    },
+    "mailbox": {
+        "base": "svg",
+        "aliases": [
+            "mailbox-workspace"
+        ],
+        "categories": [
+            "cloud"
+        ],
+        "update": {
+            "timestamp": "2026-03-30T13:11:28.840Z",
+            "author": {
+                "id": 40307321,
+                "login": "sixsixfive"
+            }
+        }
     }
 }
