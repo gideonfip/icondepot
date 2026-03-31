@@ -7,7 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatIconName(name: string) {
-	return name.replace(/-/g, " ")
+	const acronymMap: Record<string, string> = {
+		okx: "OKX",
+	}
+
+	return name
+		.split("-")
+		.map((part) => acronymMap[part.toLowerCase()] ?? part)
+		.join(" ")
 }
 
 /**

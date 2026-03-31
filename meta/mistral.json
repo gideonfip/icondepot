@@ -1,0 +1,16 @@
+{
+  "base": "svg",
+  "aliases": [
+    "mistral ai"
+  ],
+  "categories": [
+    "AI-&-LLM-Platforms"
+  ],
+  "update": {
+    "timestamp": "2026-03-31T22:15:00Z",
+    "author": {
+      "id": "gideonfip",
+      "name": "gideonfip"
+    }
+  }
+}

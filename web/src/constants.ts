@@ -1,4 +1,4 @@
-export const BASE_URL = "https://cdn.jsdelivr.net/gh/gideonfip/dashboard-icons"
+export const BASE_URL = "https://raw.githubusercontent.com/gideonfip/dashboard-icons/main"
 export const REPO_PATH = "https://github.com/gideonfip/dashboard-icons"
 export const METADATA_URL = "https://raw.githubusercontent.com/gideonfip/dashboard-icons/main/metadata.json"
 export const WEB_URL = "https://dashboardicons.com"
