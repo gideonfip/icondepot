@@ -1,0 +1,17 @@
+{
+  "base": "svg",
+  "aliases": [],
+  "categories": [
+    "Finance"
+  ],
+  "update": {
+    "timestamp": "2026-03-31T13:05:00Z",
+    "author": {
+      "id": "gideonfip",
+      "name": "gideonfip"
+    }
+  },
+  "colors": {
+    "light": "eigenlayer-wordmark-light"
+  }
+}
