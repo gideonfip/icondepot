@@ -1,0 +1,15 @@
+{
+  "base": "svg",
+  "aliases": [],
+  "categories": [
+    "AI-&-LLM-Platforms"
+  ],
+  "source": "lobe",
+  "update": {
+    "timestamp": "2026-04-01T08:14:58.933Z",
+    "author": {
+      "id": "lobehub",
+      "name": "LobeHub"
+    }
+  }
+}

@@ -3,15 +3,16 @@
  * sync-lobe-icons.mjs
  *
  * Syncs AI/LLM provider icons from lobehub/lobe-icons into this repo.
+ * Uses local clone at /tmp/lobe-icons instead of fetching from GitHub CDN.
  *
  * Usage:
  *   node scripts/sync-lobe-icons.mjs              # dry run
- *   node scripts/sync-lobe-icons.mjs --apply     # actually download
+ *   node scripts/sync-lobe-icons.mjs --apply     # actually sync
  *   node scripts/sync-lobe-icons.mjs --apply --overwrite  # overwrite existing
  *
  * What it does:
- *   1. Reads lobe-icons toc.ts to get icon list
- *   2. Downloads SVG files from lobe-icons static CDN
+ *   1. Reads lobe-icons toc.ts from local clone
+ *   2. Reads SVG files from local /tmp/lobe-icons/packages/static-svg/icons/
  *   3. Normalizes names to kebab-case
  *   4. Writes meta/*.json entries with source: "lobe"
  *   5. Updates metadata.json
@@ -20,16 +21,16 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { pipeline } from "node:stream/promises";
-import https from "node:https";
-import http from "node:http";
+import { fileURLToPath } from "url";
 
-const ROOT = new URL("../", import.meta.url).pathname;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(__dirname, "..");
 const SVG_DIR = path.join(ROOT, "svg");
 const META_DIR = path.join(ROOT, "meta");
 const METADATA_FILE = path.join(ROOT, "metadata.json");
-const LOBE_RAW = "https://raw.githubusercontent.com/lobehub/lobe-icons/master/packages/static-svg/icons";
-const LOBE_TOC_URL = "https://raw.githubusercontent.com/lobehub/lobe-icons/master/src/toc.ts";
+const LOBE_CLONE = "/tmp/lobe-icons";
+const LOBE_SVG_DIR = path.join(LOBE_CLONE, "packages/static-svg/icons");
+const LOBE_TOC_FILE = path.join(LOBE_CLONE, "src/toc.ts");
 
 const DRY = !process.argv.includes("--apply");
 const OVERWRITE = process.argv.includes("--overwrite");
@@ -43,48 +44,34 @@ function info(...args) { console.log("[sync-lobe]", ...args); }
 function warn(...args) { console.warn("[sync-lobe] WARN:", ...args); }
 function err(...args) { console.error("[sync-lobe] ERROR:", ...args); }
 
-// ─── HTTP fetch ─────────────────────────────────────────────────────────────────
+// ─── Local file read ───────────────────────────────────────────────────────────
 
-async function fetchText(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers: { "User-Agent": "sync-lobe-icons/1.0" } }, (res) => {
-      if (res.statusCode === 404) return reject(new Error(`Not found: ${url}`));
-      if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${url}`));
-      let body = "";
-      res.on("data", (chunk) => (body += chunk));
-      res.on("end", () => resolve(body));
-      res.on("error", reject);
-    }).on("error", reject);
-  });
+function readLocalFile(filePath) {
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch (e) {
+    return null;
+  }
 }
 
-async function fetchBuffer(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers: { "User-Agent": "sync-lobe-icons/1.0" } }, (res) => {
-      if (res.statusCode === 404) return reject(new Error(`Not found: ${url}`));
-      if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${url}`));
-      const chunks = [];
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-      res.on("error", reject);
-    }).on("error", reject);
-  });
+function readLocalBuffer(filePath) {
+  try {
+    return fs.readFileSync(filePath);
+  } catch (e) {
+    return null;
+  }
 }
 
 // ─── TOC parsing ─────────────────────────────────────────────────────────────────
 
 function parseLobeToc(tsContent) {
-  // Find 'const toc' and start parsing from there
   const tocStart = tsContent.indexOf("const toc");
   if (tocStart === -1) return [];
   const tocBody = tsContent.slice(tocStart);
-
-  // Find array start '[' and skip past it
   const arrStart = tocBody.indexOf("[");
   if (arrStart === -1) return [];
   const arrBody = tocBody.slice(arrStart + 1);
 
-  // Character-by-character depth tracking for { }
   let depth = 0;
   let blockStart = -1;
   const entries = [];
@@ -120,7 +107,6 @@ function parseLobeToc(tsContent) {
 // ─── Naming ────────────────────────────────────────────────────────────────────
 
 function toKebab(str) {
-  // 'OpenAI' -> 'openai', 'GoogleAI' -> 'google-ai', 'Claude2' -> 'claude-2'
   return str
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
@@ -148,11 +134,9 @@ function lobeEntryToMeta(entry, slug) {
   const now = new Date().toISOString();
   const aliases = [];
 
-  // Add title variations as aliases
   const kebabTitle = toKebab(entry.id);
   if (kebabTitle !== slug) aliases.push(kebabTitle);
 
-  // Categorize by group
   const categoryMap = {
     model: "AI-&-LLM-Platforms",
     provider: "AI-&-LLM-Platforms",
@@ -172,7 +156,6 @@ function lobeEntryToMeta(entry, slug) {
     },
   };
 
-  // Color variants
   if (hasVariants) {
     meta.colors = {};
     if (entry.param?.hasColor) meta.colors.dark = `${slug}-color`;
@@ -187,9 +170,21 @@ function lobeEntryToMeta(entry, slug) {
 async function main() {
   info("=== Lobe Icons Sync ===");
   info(`Root: ${ROOT}`);
-  info(`Mode: ${DRY ? "DRY RUN (pass --apply to download)" : "LIVE"}`);
+  info(`Lobe clone: ${LOBE_CLONE}`);
+  info(`Mode: ${DRY ? "DRY RUN (pass --apply to sync)" : "LIVE"}`);
   if (OVERWRITE) info("Overwrite: ON");
   info("");
+
+  // Verify local clone exists
+  if (!fs.existsSync(LOBE_CLONE)) {
+    err(`Lobe clone not found at ${LOBE_CLONE}`);
+    err("Please run: git clone --depth 1 https://github.com/lobehub/lobe-icons.git /tmp/lobe-icons");
+    process.exit(1);
+  }
+  if (!fs.existsSync(LOBE_TOC_FILE)) {
+    err(`Lobe toc.ts not found at ${LOBE_TOC_FILE}`);
+    process.exit(1);
+  }
 
   // 1. Load existing metadata
   let existingMeta = {};
@@ -200,13 +195,14 @@ async function main() {
     warn(`Could not load metadata.json: ${e.message}`);
   }
 
-  // 2. Load lobe toc
-  info(`Fetching lobe-icons toc from GitHub...`);
+  // 2. Load lobe toc from local file
+  info(`Reading lobe-icons toc from local clone...`);
   let tocText;
   try {
-    tocText = await fetchText(LOBE_TOC_URL);
+    tocText = readLocalFile(LOBE_TOC_FILE);
+    if (!tocText) throw new Error("Failed to read toc.ts");
   } catch (e) {
-    err(`Failed to fetch lobe toc: ${e.message}`);
+    err(`Failed to read lobe toc: ${e.message}`);
     process.exit(1);
   }
   const lobeEntries = parseLobeToc(tocText);
@@ -218,7 +214,7 @@ async function main() {
   );
   info(`Filtered to ${toProcess.length} model/provider/application entries`);
 
-  // 3. Build list of files to download
+  // 3. Build list of files to sync
   const pending = [];
   const skipCollisions = [];
 
@@ -235,51 +231,49 @@ async function main() {
     pending.push({ entry, slug });
   }
 
-  info(`Pending download: ${pending.length}`);
+  info(`Pending sync: ${pending.length}`);
   info(`Skipped (existing, no overwrite): ${skipCollisions.length}`);
 
-  // 4. Download pending files (with concurrency control)
-  let downloaded = 0;
+  // 4. Sync pending files (local reads with concurrency control)
+  let synced = 0;
   let failed = 0;
   const updatedMeta = { ...existingMeta };
   const newMetaFiles = [];
-  const CONCURRENCY = 5;
-  const BATCH_LOG = 20;
+  const CONCURRENCY = 10;
+  const BATCH_LOG = 50;
 
-  async function downloadOne(entry, slug) {
-    const monoUrl = `${LOBE_RAW}/${entry.id}.svg`;
-    const colorUrl = `${LOBE_RAW}/${entry.id}-color.svg`;
-    const colorDst = path.join(SVG_DIR, `${slug}-color.svg`);
+  async function syncOne(entry, slug) {
+    const monoSrc = path.join(LOBE_SVG_DIR, `${entry.id}.svg`);
+    const colorSrc = path.join(LOBE_SVG_DIR, `${entry.id}-color.svg`);
     const monoDst = path.join(SVG_DIR, `${slug}.svg`);
+    const colorDst = path.join(SVG_DIR, `${slug}-color.svg`);
     const metaDst = path.join(META_DIR, `${slug}.json`);
 
-    // Download mono SVG
-    try {
-      if (DRY) {
-        log(`[DRY] would download: ${monoUrl}`);
-      } else {
-        const buf = await fetchBuffer(monoUrl);
-        fs.mkdirSync(SVG_DIR, { recursive: true });
-        fs.writeFileSync(monoDst, buf);
-        log(`Saved: ${monoDst}`);
-      }
-    } catch (e) {
-      warn(`Failed mono ${entry.id}: ${e.message}`);
+    // Read mono SVG from local
+    let monoContent = readLocalBuffer(monoSrc);
+    if (!monoContent) {
+      warn(`Missing local SVG: ${monoSrc}`);
       return false;
     }
 
-    // Download color variant if available
-    try {
-      if (!DRY) {
-        const buf = await fetchBuffer(colorUrl);
-        fs.writeFileSync(colorDst, buf);
-        log(`Saved color: ${colorDst}`);
-      }
-    } catch (e) {
-      // Color variant may not exist — that's ok
+    if (DRY) {
+      log(`[DRY] would sync: ${monoDst}`);
+    } else {
+      fs.mkdirSync(SVG_DIR, { recursive: true });
+      fs.writeFileSync(monoDst, monoContent);
+      log(`Saved: ${monoDst}`);
     }
 
-    // Write meta file ONLY after successful download
+    // Read color variant if available
+    let colorContent = readLocalBuffer(colorSrc);
+    if (colorContent) {
+      if (!DRY) {
+        fs.writeFileSync(colorDst, colorContent);
+        log(`Saved color: ${colorDst}`);
+      }
+    }
+
+    // Write meta file ONLY after successful read
     const meta = lobeEntryToMeta(entry, slug);
     if (!DRY && fs.existsSync(monoDst)) {
       fs.mkdirSync(META_DIR, { recursive: true });
@@ -294,21 +288,21 @@ async function main() {
   // Process in batches
   for (let i = 0; i < pending.length; i += CONCURRENCY) {
     const batch = pending.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(batch.map(({ entry, slug }) => downloadOne(entry, slug)));
+    const results = await Promise.all(batch.map(({ entry, slug }) => syncOne(entry, slug)));
     const ok = results.filter(Boolean).length;
-    downloaded += ok;
+    synced += ok;
     if (!DRY && (i + CONCURRENCY) % BATCH_LOG === 0) {
-      info(`Progress: ${Math.min(i + CONCURRENCY, pending.length)}/${pending.length} (${downloaded} ok)`);
+      info(`Progress: ${Math.min(i + CONCURRENCY, pending.length)}/${pending.length} (${synced} ok)`);
     }
   }
 
   // 5. Write updated metadata.json
-  if (!DRY && downloaded > 0) {
+  if (!DRY && synced > 0) {
     const sorted = Object.keys(updatedMeta)
       .sort()
       .reduce((acc, k) => ({ ...acc, [k]: updatedMeta[k] }), {});
     fs.writeFileSync(METADATA_FILE, JSON.stringify(sorted, null, 4) + "\n");
-    info(`Updated metadata.json with ${downloaded} new entries`);
+    info(`Updated metadata.json with ${synced} new entries`);
   }
 
   // 6. Summary
@@ -317,10 +311,10 @@ async function main() {
   info(`Mode:  ${DRY ? "DRY RUN" : "LIVE"}`);
   info(`Lobe entries found:  ${lobeEntries.length}`);
   info(`Entries to process:   ${pending.length}`);
-  info(`Downloaded:           ${downloaded}`);
-  info(`Failed:               ${failed}`);
-  info(`Skipped (exists):     ${skipCollisions.length}`);
-  info(`New meta files:      ${newMetaFiles.length}`);
+  info(`Synced:              ${synced}`);
+  info(`Failed:              ${failed}`);
+  info(`Skipped (exists):    ${skipCollisions.length}`);
+  info(`New meta files:     ${newMetaFiles.length}`);
   if (newMetaFiles.length > 0) {
     info(`New icons: ${newMetaFiles.join(", ")}`);
   }
@@ -328,7 +322,7 @@ async function main() {
   if (DRY) {
     info("");
     warn("=== DRY RUN — no files were written ===");
-    warn("Run again with --apply to download and write files.");
+    warn("Run again with --apply to sync files.");
   }
 }
 

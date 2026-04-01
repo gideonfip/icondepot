@@ -37,8 +37,49 @@ function err(...a) { console.error("[norm] ERROR:", ...a); }
 
 const LOBE_SOURCES = new Set([
   "gemini","mistral","cohere","groq","cerebras","together",
-  "huggingface","kilocode","fireworks","hyperbolic","llmgateway",
-  "okx","taiko","avalanche","metamask","eigenlayer","eigenlayer-wordmark",
+  "hugging-face","kilo-code","fireworks","hyperbolic",
+  "ace","adobe","adobe-firefly","agent-voice","agui","ai2","ai21","ai302",
+  "ai360","ai-hub-mix","ai-mass","aion-labs","ai-studio","akash-chat",
+  "aleph-alpha","alibaba","alibaba-cloud","amp","ant-group","anthropic",
+  "antigravity","anyscale","apertis","apple","arcee","ask-verdict",
+  "assembly-ai","atlas-cloud","automatic","aws","aya","azure","azure-ai",
+  "baai","baichuan","baidu","baidu-cloud","bailian","baseten","bedrock",
+  "bfl","bilibili","bilibili-index","bing","bria-ai","burn-cloud",
+  "byte-dance","cap-cut","cent-ml","chat-glm","cherry-studio","civitai",
+  "claude","claude-code","cline","clipdrop","cloudflare","code-flicker",
+  "code-gee-x","codex","cog-video","cog-view","colab","comet-api",
+  "comfy-ui","command-a","copilot","copilot-kit","coqui","coze","crew-ai",
+  "crusoe","cursor","cyber-cut","dalle","dbrx","deep-ai","deep-cogito",
+  "deep-infra","deep-l","deep-mind","deep-seek","dify","doc2x","doc-search",
+  "dolphin","doubao","dream-machine","eleven-labs","eleven-x","essential-ai",
+  "exa","fal","fast-gpt","featherless","figma","fish-audio","flora",
+  "flowith","flux","friendli","gemini-cli","gemma","gitee-ai","github",
+  "github-copilot","glama","glif","glmv","google","google-cloud","goose",
+  "gradio","greptile","grok","hailuo","haiper","hedra","higress","huawei",
+  "huawei-cloud","hunyuan","ibm","ideogram","i-fly-tek-cloud","inception",
+  "inference","infermatic","infinigence","inflection","intern-lm","jimeng",
+  "jina","junie","kimi","kling","kluster","kolors","krea","kwai-kat",
+  "kwaipilot","lambda","lang-chain","langfuse","lang-graph","lang-smith",
+  "lepton-ai","lg","lightricks","liquid","live-kit","llama-index","l-la-va",
+  "llm-api","lm-studio","lobe-hub","long-cat","lovable","lovart","luma",
+  "magic","make","manus","mastra","mcp","mcp-so","menlo","meta","meta-ai",
+  "meta-gpt","microsoft","midjourney","minimax","model-scope","monica",
+  "moonshot","morph","my-shell","n8n","nano-banana","nebius","new-api",
+  "notebook-lm","notion","nous-research","nova","novel-ai","novita",
+  "npl-cloud","nvidia","obsidian","ollama","open-ai","open-chat","open-claw",
+  "open-code","open-hands","open-router","open-web-ui","pa-lm","parasail",
+  "perplexity","phidata","phind","pika","pix-verse","player2","poe",
+  "pollinations","ppio","pruna-ai","pydantic-ai","qingyan","qiniu","qoder",
+  "qwen","railway","recraft","relace","replicate","replit","reve","roo-code",
+  "rss-hub","runway","rwkv","samba-nova","search1api","search-api",
+  "sense-nova","silicon-cloud","skywork","smithery","snowflake","soph-net",
+  "sora","spark","stability","state-cloud","stepfun","straico","stream-lake",
+  "sub-model","suno","sync","targon","tavily","tencent","tencent-cloud",
+  "tiangong","tii","topaz-labs","trae","tripo","turi-x","udio","unstructured",
+  "upstage","v0","vectorizer-ai","vercel","vertex-ai","vidu","viggle",
+  "vllm","volcengine","voyage","wenxin","windsurf","workers-ai","xai",
+  "xiaomi-mi-mo","xinference","xpay","xuanyuan","yandex","yi","you-mind",
+  "yuanbao","zai","zapier","zeabur","zencoder","zen-mux","zero-one","zhipu",
 ]);
 
 const KNOWN_VARIANT_SUFFIXES = ["-light", "-dark", "-color", "-text", "-text-cn", "-brand", "-brand-color"];
@@ -121,6 +162,7 @@ async function main() {
           fs.unlinkSync(metaFile);
           info(`Removed orphan meta: ${k}.json`);
         }
+        delete metadata[k];
       }
     }
   }
