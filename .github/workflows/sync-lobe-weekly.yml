@@ -1,0 +1,86 @@
+name: Sync Lobe Icons (Weekly)
+
+on:
+  schedule:
+    # Every Sunday at 02:00 UTC
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        required: true
+        default: "dry"
+        type: choice
+        options:
+          - dry
+          - apply
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run normalize (dry)
+        run: node scripts/normalize.mjs
+
+      - name: Run lobe-icons sync (dry)
+        run: node scripts/sync-lobe-icons.mjs
+
+      - name: Show diff summary
+        run: |
+          git diff --stat
+
+      - name: Create PR with changes
+        if: github.event.inputs.mode == 'apply' || github.event_name == 'schedule'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b chore/sync-lobe-icons-$(date +%Y%m%d)
+          git add svg/ meta/ metadata.json scripts/
+          git commit -m "chore: sync lobe-icons provider icons"
+          git push -u origin HEAD
+          gh pr create \
+            --title "chore: sync lobe-icons provider icons" \
+            --body "Automated weekly sync of lobe-icons provider icons.\\n\\nRun by: ${{ github.actor }}" \
+            --base main \
+            --assignee "${{ github.actor }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply changes directly (schedule mode)
+        if: github.event_name == 'schedule'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          node scripts/sync-lobe-icons.mjs --apply
+          node scripts/normalize.mjs --apply
+          git add svg/ meta/ metadata.json
+          git status
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync lobe-icons provider icons $(date +%Y%m%d)"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
