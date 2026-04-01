@@ -10,19 +10,19 @@
  *   node scripts/normalize.mjs --apply -v  # verbose fix
  *
  * What it checks/fixes:
- *   1. SVG files without metadata entries  → report or remove
- *   2. Metadata entries without SVG files  → report or remove
- *   3. Duplicate/collision slugs           → report or remove older
- *   4. Broken/invalid SVG files           → report or remove
- *   5. Missing license headers in SVG      → inject if missing
- *   6. Inconsistent category assignments   → normalize
+ *   1. Broken/invalid SVG files              → report or remove
+ *   2. Metadata entries without any SVG      → report or remove
+ *   3. SVG files without metadata entry      → report (not removed)
+ *   4. Missing license headers in SVG       → inject if missing
+ *   5. Tag entries with source ("dashboard" or "lobe")
  */
 
 import fs from "node:fs";
-import path from "node:path";
-import { Readable } from "node:stream";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const ROOT = new URL("../", import.meta.url).pathname;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(__dirname, "..");
 const SVG_DIR = path.join(ROOT, "svg");
 const META_DIR = path.join(ROOT, "meta");
 const METADATA_FILE = path.join(ROOT, "metadata.json");
@@ -41,7 +41,15 @@ const LOBE_SOURCES = new Set([
   "okx","taiko","avalanche","metamask","eigenlayer","eigenlayer-wordmark",
 ]);
 
-// ─── SVG validation ─────────────────────────────────────────────────────────────
+const KNOWN_VARIANT_SUFFIXES = ["-light", "-dark", "-color", "-text", "-text-cn", "-brand", "-brand-color"];
+
+function stripVariantSuffix(name) {
+  let base = name;
+  for (const suf of KNOWN_VARIANT_SUFFIXES) {
+    if (base.endsWith(suf)) base = base.slice(0, -suf.length);
+  }
+  return base;
+}
 
 function isValidSvg(content) {
   return (
@@ -51,19 +59,12 @@ function isValidSvg(content) {
   );
 }
 
-function svgNeedsLicenseInjection(content) {
-  return !content.includes("Apache License") && !content.includes("SPDX-License-Identifier");
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 async function main() {
   info("=== Icon Normalize ===");
   info(`Root: ${ROOT}`);
   info(`Mode: ${DRY ? "DRY RUN (pass --apply to fix)" : "LIVE"}`);
   info("");
 
-  // 1. Load metadata
   let metadata = {};
   try {
     metadata = JSON.parse(fs.readFileSync(METADATA_FILE, "utf8"));
@@ -72,7 +73,6 @@ async function main() {
     warn(`Could not load metadata.json: ${e.message}`);
   }
 
-  // 2. List SVG files
   let svgFiles = [];
   try {
     svgFiles = fs.readdirSync(SVG_DIR).filter((f) => f.endsWith(".svg"));
@@ -81,22 +81,40 @@ async function main() {
     warn(`Could not read svg/: ${e.message}`);
   }
 
-  // 3. Normalize SVG names
-  const svgBases = new Set();
+  // ── 1. Broken SVG files ─────────────────────────────────────────────────────
+  const brokenSvg = [];
   for (const f of svgFiles) {
-    let base = f.replace(/\.svg$/, "");
-    for (const suf of ["-light", "-dark", "-color", "-text", "-text-cn", "-brand", "-brand-color"]) {
-      if (base.endsWith(suf)) base = base.slice(0, -suf.length);
+    try {
+      const content = fs.readFileSync(path.join(SVG_DIR, f), "utf8");
+      if (!isValidSvg(content)) brokenSvg.push(f);
+    } catch (e) {
+      brokenSvg.push(f);
     }
-    svgBases.add(base);
+  }
+  if (brokenSvg.length > 0) {
+    warn(`Broken/invalid SVG files: ${brokenSvg.length}`);
+    brokenSvg.forEach((f) => warn(`  broken: ${f}`));
+    if (!DRY) {
+      for (const f of brokenSvg) {
+        fs.unlinkSync(path.join(SVG_DIR, f));
+        info(`Removed broken SVG: ${f}`);
+      }
+    }
   }
 
-  // 4. Metadata without SVG → orphan metadata
-  const orphansMeta = Object.keys(metadata).filter((k) => !svgBases.has(k));
+  // ── 2. Metadata entries without any SVG variant ──────────────────────────────
+  const orphansMeta = [];
+  for (const slug of Object.keys(metadata)) {
+    const hasSvg = svgFiles.some((f) => {
+      const base = f.replace(/\.svg$/, "");
+      return base === slug || base.startsWith(slug + "-");
+    });
+    if (!hasSvg) orphansMeta.push(slug);
+  }
   if (orphansMeta.length > 0) {
     info(`Orphan metadata entries (no SVG): ${orphansMeta.length}`);
-    if (VERBOSE) orphansMeta.forEach((k) => log(`  orphan: ${k}`));
-    if (!DRY && orphansMeta.length > 0) {
+    if (VERBOSE) orphansMeta.slice(0, 30).forEach((k) => log(`  orphan: ${k}`));
+    if (!DRY) {
       for (const k of orphansMeta) {
         const metaFile = path.join(META_DIR, `${k}.json`);
         if (fs.existsSync(metaFile)) {
@@ -107,48 +125,24 @@ async function main() {
     }
   }
 
-  // 5. SVG without metadata → orphan SVG
+  // ── 3. SVG without metadata entry ──────────────────────────────────────────
   const orphansSvg = [];
-  for (const base of svgBases) {
-    const metaFile = path.join(META_DIR, `${base}.json`);
-    if (!fs.existsSync(metaFile) && !metadata[base]) {
-      orphansSvg.push(base);
-    }
+  for (const f of svgFiles) {
+    const base = f.replace(/\.svg$/, "");
+    const stripped = stripVariantSuffix(base);
+    const hasMeta = fs.existsSync(path.join(META_DIR, `${stripped}.json`)) || !!metadata[stripped];
+    if (!hasMeta) orphansSvg.push(f);
   }
   if (orphansSvg.length > 0) {
-    info(`SVG without metadata (no meta entry): ${orphansSvg.length}`);
+    info(`SVG without metadata entry: ${orphansSvg.length}`);
     if (VERBOSE) orphansSvg.slice(0, 20).forEach((k) => log(`  no-meta: ${k}`));
   }
 
-  // 6. Broken SVG files
-  const brokenSvg = [];
-  for (const f of svgFiles) {
-    try {
-      const content = fs.readFileSync(path.join(SVG_DIR, f), "utf8");
-      if (!isValidSvg(content)) {
-        brokenSvg.push(f);
-      }
-    } catch (e) {
-      brokenSvg.push(f);
-    }
-  }
-  if (brokenSvg.length > 0) {
-    warn(`Broken/invalid SVG files: ${brokenSvg.length}`);
-    brokenSvg.forEach((f) => warn(`  broken: ${f}`));
-    if (!DRY && brokenSvg.length > 0) {
-      for (const f of brokenSvg) {
-        fs.unlinkSync(path.join(SVG_DIR, f));
-        info(`Removed broken SVG: ${f}`);
-      }
-    }
-  }
-
-  // 7. Source tagging
+  // ── 4. Source tagging ───────────────────────────────────────────────────────
   let tagged = 0;
   for (const [slug, meta] of Object.entries(metadata)) {
     if (!meta.source) {
-      const isLobe = LOBE_SOURCES.has(slug);
-      meta.source = isLobe ? "lobe" : "dashboard";
+      meta.source = LOBE_SOURCES.has(slug) ? "lobe" : "dashboard";
       if (VERBOSE) log(`tagged source=${meta.source} for ${slug}`);
       if (!DRY) tagged++;
     }
@@ -157,41 +151,23 @@ async function main() {
     info(`Tagged ${tagged} entries with source`);
   }
 
-  // 8. Report duplicates
-  const seen = new Map();
-  const duplicates = [];
-  for (const base of svgBases) {
-    if (seen.has(base)) {
-      seen.get(base).push(base);
-    } else {
-      seen.set(base, [base]);
-    }
-  }
-  const trueDups = [...seen.entries()].filter(([, v]) => v.length > 1);
-  if (trueDups.length > 0) {
-    warn(`Duplicate base names: ${trueDups.length}`);
-    trueDups.forEach(([k, v]) => warn(`  ${k}: ${v.join(", ")}`));
-  }
-
-  // 9. Write fixed metadata
+  // ── 5. Write fixed metadata ─────────────────────────────────────────────────
   if (!DRY) {
-    const sorted = Object.keys(metadata)
-      .sort()
+    const sorted = Object.keys(metadata).sort()
       .reduce((acc, k) => ({ ...acc, [k]: metadata[k] }), {});
     fs.writeFileSync(METADATA_FILE, JSON.stringify(sorted, null, 4) + "\n");
     info("Wrote metadata.json");
   }
 
-  // 10. Summary
+  // ── Summary ─────────────────────────────────────────────────────────────────
   info("");
   info("=== Summary ===");
-  info(`SVG files:      ${svgFiles.length}`);
-  info(`Metadata keys:  ${Object.keys(metadata).length}`);
-  info(`Orphan meta:    ${orphansMeta.length}`);
+  info(`SVG files:     ${svgFiles.length}`);
+  info(`Metadata keys: ${Object.keys(metadata).length}`);
+  info(`Orphan meta:   ${orphansMeta.length}`);
   info(`Orphan SVG:    ${orphansSvg.length}`);
   info(`Broken SVG:    ${brokenSvg.length}`);
   info(`Tagged:        ${tagged}`);
-  info(`Duplicates:    ${trueDups.length}`);
 
   if (DRY) {
     info("");
